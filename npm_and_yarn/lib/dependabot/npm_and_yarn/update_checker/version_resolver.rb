@@ -335,7 +335,14 @@ module Dependabot
                 reqs = requirement_class.requirements_array(req)
                 next false unless version_for_dependency(dep)
 
-                reqs.any? { |r| r.satisfied_by?(version_for_dependency(dep)) }
+                is_satisfied = reqs.any? do |r|
+                  r.satisfied_by?(version_for_dependency(dep))
+                end
+                status_emoji = is_satisfied ? "✅" : "❌"
+                requirements_text = dep.requirements.map { |r| "#{r[:requirement]} in #{r[:file]}" }.join(",")
+                reqs_text = reqs.map { |r| r.to_s }.join("or")
+                p("【#{status_emoji} #{details['name']}:#{version}】 project dependency to #{dep.name}:#{requirements_text} #{is_satisfied ? '' : 'doesn\'t'} meet #{details['name']} peerDependencies #{reqs_text}")
+                is_satisfgoied
               rescue Gem::Requirement::BadRequirementError
                 false
               end
@@ -353,7 +360,10 @@ module Dependabot
             next false if req.include?("/")
 
             reqs = requirement_class.requirements_array(req)
-            reqs.any? { |r| r.satisfied_by?(version) }
+            is_satisfied = reqs.any? { |r| r.satisfied_by?(version) }
+            status_emoji = is_satisfied ? "✅" : "❌"
+            p("【#{status_emoji}#{peer_req[:requirement_name]} : #{version}】#{is_satisfied ? '' : 'doesn\'t'} meet peerDependency #{peer_req[:requirement_version]} by #{peer_req[:requiring_dep_name]}")
+            is_satisfied
           rescue Gem::Requirement::BadRequirementError
             false
           end
